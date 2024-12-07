@@ -128,7 +128,7 @@ if st.button("Find Meaning and Synonyms"):
                 selected_option = st.radio(question, options, key=f"question_{i}")
                 
                 if selected_option:
-                    correct_answer = options[0,1,2]  
+                    correct_answer = options[]  
                     if selected_option == correct_answer:
                         st.success("Correct!")
                     else:
