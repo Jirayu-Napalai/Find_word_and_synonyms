@@ -101,20 +101,17 @@ def get_word_details(word):
     return None, None, None, None
 
 def generate_quiz(meanings, synonyms, examples):
-    questions = []
-    explanations = []
-
-    for i in range(10):
-        correct_answer_idx = random.choice([0, 1, 2])
-        options = random.sample(meanings + synonyms + examples, 3)
-        question = f"What is the correct meaning of the word based on its definition?"
-        
-        correct_answer = options[correct_answer_idx]
-        explanation = f"The correct answer is: {correct_answer}. This corresponds to the meaning or usage provided earlier."
-
-        questions.append((question, options, correct_answer, explanation))
-
-    return questions
+    questions = [
+        ("What is the correct meaning of the word based on its definition?", meanings),
+        ("Which of the following are synonyms for the word?", synonyms),
+        ("Which of these sentences uses the word correctly?", examples),
+    ]
+    
+    shuffled_questions = []
+    for question, options in questions:
+        shuffled_questions.append((question, options))
+    
+    return shuffled_questions
 
 if st.button("Find Meaning and Synonyms"):
     if word:
@@ -123,14 +120,18 @@ if st.button("Find Meaning and Synonyms"):
             st.markdown(f"### Details for *{word}*:") 
             st.dataframe(result_df)
 
-            questions = generate_quiz(meanings, synonyms_list, examples)
-            for i, (question, options, correct_answer, explanation) in enumerate(questions):
+            if 'quiz_questions' not in st.session_state:
+                st.session_state.quiz_questions = generate_quiz(meanings, synonyms_list, examples)
+
+            for i, (question, options) in enumerate(st.session_state.quiz_questions):
                 st.markdown(f"#### Question {i + 1}")
                 selected_option = st.radio(question, options, key=f"question_{i}")
+                
                 if selected_option:
+                    correct_answer = options[0] 
                     if selected_option == correct_answer:
-                        st.success(f"Correct! {explanation}")
+                        st.success("Correct!")
                     else:
-                        st.error(f"Incorrect. {explanation}")
+                        st.error("Incorrect.")
     else:
         st.warning("Please enter a word!")
