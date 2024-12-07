@@ -12,7 +12,7 @@ openai.api_key = api_key
 
 word = st.text_input("What word are you looking for?")
 
-@st.cache_data  
+@st.cache_data  # Cache the function output
 def get_word_details(word):
     if not api_key:
         st.error("Please enter your API key in the sidebar.")
@@ -23,13 +23,13 @@ def get_word_details(word):
         return None
 
     try:
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms in a JSON format like this: "
                                            f"{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2']}, "
-                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4']}]}}"},
+                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4']}}]}}"}, # Corrected line
             ],
         )
 
