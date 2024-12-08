@@ -17,12 +17,10 @@ def get_word_details(word):
         return None
     try:
         st.write(f"Searching for meaning of: {word}")
-        
         prompt = "Provide the meaning(s) of '{word}' and their corresponding synonyms and part of speech and an example sentence for each meaning in a JSON format like this: " \
-                  "{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, " \
-                  "{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}}"
-        prompt = prompt.format(word=word)  
-        
+                 "{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, " \
+                 "{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}}"
+        prompt = prompt.format(word=word)
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -37,10 +35,12 @@ def get_word_details(word):
             rows = []
             for meaning_data in meanings:
                 meaning = meaning_data.get("meaning", "")
-                synonyms = meaning_data.get("synonyms", [])
-                part_of_speech = meaning_data.get("part_of_speech", "")
-                example = meaning_data.get("example", "")
-                rows.append({"Word": word, "Part of Speech": part_of_speech, "Meaning": meaning, "Synonyms": ", ".join(synonyms), "Example": example})
+                if meaning:  # Only proceed if 'meaning' is present
+                    synonyms = meaning_data.get("synonyms", [])
+                    part_of_speech = meaning_data.get("part_of_speech", "")
+                    example = meaning_data.get("example", "")
+                    rows.append({"Word": word, "Part of Speech": part_of_speech, "Meaning": meaning, "Synonyms": ", ".join(synonyms), "Example": example})
+
             df = pd.DataFrame(rows)
             return df
         except json.JSONDecodeError as e:
