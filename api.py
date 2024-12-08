@@ -69,11 +69,32 @@ def get_word_details(word):
     st.error("Failed to fetch a valid response after 3 attempts. Please try again later.")
     return None
 
+def generate_passage(word, meanings_df):
+    meanings_list = meanings_df["Meaning"].tolist()
+    prompt = f"Write a short passage using the word '{word}' in at least {len(meanings_list)} different ways, showcasing these meanings: {meanings_list}. Make the word '{word}' bold each time it is used."
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+    )
+    passage = response.choices[0].message.content
+    return passage
+
 if st.button("Find Meaning and Synonyms"):
     if word:
         result_df = get_word_details(word)
         if result_df is not None:
-            st.markdown(f"### Details for *{word}*:") 
+            st.markdown(f"### Details for *{word}*:")
             st.dataframe(result_df)
+            st.markdown("### Generate Passage:")
+            passage = generate_passage(word, result_df)
+            st.markdown(f"### Passage using *{word}*:")
+            st.write(passage)
+
+            st.markdown("### Meaning References:")
+            for index, row in result_df.iterrows():
+                st.write(f"**Meaning {index + 1}:** {row['Meaning']}") 
     else:
         st.warning("Please enter a word!")
