@@ -22,8 +22,8 @@ def get_word_details(word):
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and part of speech and an example sentence for each meaning in a JSON format like this: "
-                                           f"{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, "
-                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}"}
+                                           f"{{{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, "
+                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}}}"}
             ],
         )
         content = response.choices[0].message.content.strip()
