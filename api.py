@@ -31,11 +31,11 @@ def get_word_details(word):
         content = response.choices[0].message.content.strip()
         try:
             data = json.loads(content)
-            meanings = data.get("meanings", [])
+            meanings = data.get("meanings", []) or data.get("definitions", []) or data.get("results", [])
             rows = []
             for meaning_data in meanings:
-                meaning = meaning_data.get("meaning", "")
-                if meaning:  # Only proceed if 'meaning' is present
+                if 'meaning' in meaning_data:
+                    meaning = meaning_data.get("meaning", "")
                     synonyms = meaning_data.get("synonyms", [])
                     part_of_speech = meaning_data.get("part_of_speech", "")
                     example = meaning_data.get("example", "")
