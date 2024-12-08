@@ -71,7 +71,7 @@ def get_word_details(word):
 
 def generate_passage(word, meanings_df):
     meanings_list = meanings_df["Meaning"].tolist()
-    prompt = f"Write a short passage using the word '<u>**{word}**</u>' in at least {len(meanings_list)} different ways, showcasing these meanings: {meanings_list}. Make the word '<u>**{word}**</u>' bold and underlined each time it is used, using markdown '<u>**{word}**</u>'."  
+    prompt = f"Write a short passage using the word '<ins><b>{word}</b></ins>' in at least {len(meanings_list)} different ways, showcasing these meanings: {meanings_list}. Make the word '<ins><b>{word}</b></ins>' bold and underlined each time it is used, using HTML tags '<ins><b>{word}</b></ins>'."  
 
     response = openai.chat.completions.create(  
         model="gpt-4",  
@@ -81,7 +81,7 @@ def generate_passage(word, meanings_df):
         ]
     )
 
-    passage = response.choices[0].message.content.strip()
+    passage = response.choices[0].message.content..strip()
     return passage
 
 if st.button("Find Meaning and Synonyms"):
