@@ -22,13 +22,13 @@ def get_word_details(word):
     try:
         st.write(f"Searching for meaning of: {word}")
 
+        json_example = "{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'example': 'example sentence1'}, {'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'example': 'example sentence2'}]}"
+
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and an example sentence for each meaning in a JSON format like this: "
-                                           f"{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'example': 'example sentence1'}, "
-                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'example': 'example sentence2'}]}}"},
+                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and an example sentence for each meaning in a JSON format like this: {json_example}"},  
             ],
         )
 
