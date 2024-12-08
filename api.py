@@ -1,12 +1,12 @@
 import openai
 import streamlit as st
 import pandas as pd
+import json
 
 st.title("Word Meaning and Synonyms Finder")
 
 api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
-if api_key:
-    openai.api_key = api_key
+openai.api_key = api_key
 
 word = st.text_input("What word are you looking for?")
 
@@ -15,64 +15,44 @@ def get_word_details(word):
         st.error("Please enter your API key in the sidebar.")
         return None
 
-    if not word.strip().isalpha():
-        st.warning("Enter a valid word containing only alphabets.")
+    if not word:
+        st.warning("Enter a word to search for its meaning.")
         return None
 
     try:
-        with st.spinner("Fetching details... Please wait."):
-            response = openai.chat.completions.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": "You are an assistant specialized in language analysis."},
-                    {"role": "user",
-                     "content": f"Provide detailed information about the word '{word}' in this exact structured format:\n"
-                                "### Meaning:\n"
-                                "[Meaning]\n"
-                                "### Part of Speech:\n"
-                                "[Part of speech for this meaning]\n"
-                                "### Synonyms:\n"
-                                "[Comma-separated list of synonyms]\n"
-                                "### Example:\n"
-                                "[Example sentence]"}
-                ],
-                max_tokens=1000,
-                temperature=0.7
-            )
+        st.write(f"Searching for meaning of: {word}")
 
-        content = response.choices[0].message.content.strip()
-        parts = content.split("###")[1:]
-        entries = []
-        entry = {}
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms in a JSON format like this: "
+                                           f"{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2']}, "
+                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4']}]}}"},
+            ],
+        )
 
-        for part in parts:
-            if part.startswith("Meaning:"):
-                if entry:
-                    entries.append(entry)
-                entry = {"Meaning": part.split(":", 1)[1].strip()}
-            elif part.startswith("Part of Speech:"):
-                entry["Part of Speech"] = part.split(":", 1)[1].strip()
-            elif part.startswith("Synonyms:"):
-                entry["Synonyms"] = part.split(":", 1)[1].strip()
-            elif part.startswith("Example:"):
-                entry["Example"] = part.split(":", 1)[1].strip()
+        content = response.choices[0].message["content"]
 
-        if entry:
-            entries.append(entry)
+        try:
+            data = json.loads(content)
+            meanings = data.get("meanings", [])
 
-        df = pd.DataFrame(entries)
-        return df
+            rows = []
+            for meaning_data in meanings:
+                meaning = meaning_data.get("meaning", "")
+                synonyms = meaning_data.get("synonyms", [])
+                rows.append({"Word": word, "Meaning": meaning, "Synonyms": ", ".join(synonyms)})
 
-    except openai.error.AuthenticationError:
-        st.error("Authentication error: Please check your API key.")
-    except openai.error.RateLimitError:
-        st.error("Rate limit exceeded: Too many requests. Try again later.")
-    except openai.error.OpenAIError as e:
-        st.error(f"OpenAI error: {e}")
+            df = pd.DataFrame(rows)
+            return df
+        except json.JSONDecodeError as e:
+            st.error(f"Error decoding JSON response: {e}")
+            return None
+
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
-
-    return None
+        return None
 
 if st.button("Find Meaning and Synonyms"):
     if word:
