@@ -22,13 +22,13 @@ def get_word_details(word):
     try:
         st.write(f"Searching for meaning of: {word}")
 
-        json_example = "{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'example': 'example sentence1'}, {'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'example': 'example sentence2'}]}"
-
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and an example sentence for each meaning in a JSON format like this: {json_example}"},  
+                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and part of speech and an example sentence for each meaning in a JSON format like this: "
+                                           f"{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, "
+                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}"},
             ],
         )
 
@@ -42,8 +42,9 @@ def get_word_details(word):
             for meaning_data in meanings:
                 meaning = meaning_data.get("meaning", "")
                 synonyms = meaning_data.get("synonyms", [])
-                example = meaning_data.get("example", "") 
-                rows.append({"Word": word, "Meaning": meaning, "Synonyms": ", ".join(synonyms), "Example": example})
+                part_of_speech = meaning_data.get("part_of_speech", "")  # Extract part of speech
+                example = meaning_data.get("example", "")
+                rows.append({"Word": word, "Part of Speech": part_of_speech, "Meaning": meaning, "Synonyms": ", ".join(synonyms), "Example": example})
 
             df = pd.DataFrame(rows)
             return df
