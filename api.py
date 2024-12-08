@@ -16,7 +16,7 @@ def get_word_details(word):
                 max_tokens=500,
                 temperature=0.7,
             )
-        result_text = response.choices[0].text.strip()
+        result_text = response.choices[0].text.content.strip()
         meanings = result_text.split("Meanings:")[1].split("Synonyms:")[0].strip()
         synonyms = result_text.split("Synonyms:")[1].split("Examples:")[0].strip()
         examples = result_text.split("Examples:")[1].strip()
