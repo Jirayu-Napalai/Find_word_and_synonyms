@@ -27,7 +27,7 @@ def get_word_details(word):
     for attempt in range(3):
         try:
             with st.spinner(f"Searching for meanings of: {word} (Attempt {attempt + 1}/3)..."):
-                response = openai.chat.compleations.create(
+                response = openai.chat.completions.create(
                     model="gpt-4",
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant."},
