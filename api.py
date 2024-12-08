@@ -17,13 +17,17 @@ def get_word_details(word):
         return None
     try:
         st.write(f"Searching for meaning of: {word}")
+        
+        prompt = "Provide the meaning(s) of '{word}' and their corresponding synonyms and part of speech and an example sentence for each meaning in a JSON format like this: " \
+                  "{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, " \
+                  "{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}}"
+        prompt = prompt.format(word=word)  
+        
         response = openai.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and part of speech and an example sentence for each meaning in a JSON format like this: "
-                                           f"{{{{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence1'}, "
-                                           f"{{'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'part_of_speech': 'noun/verb/etc.', 'example': 'example sentence2'}]}}}}"}
+                {"role": "user", "content": prompt}
             ],
         )
         content = response.choices[0].message.content.strip()
