@@ -73,17 +73,15 @@ def generate_passage(word, meanings_df):
     meanings_list = meanings_df["Meaning"].tolist()
     prompt = f"Write a short passage using the word '{word}' in at least {len(meanings_list)} different ways, showcasing these meanings: {meanings_list}. Make the word '{word}' bold each time it is used."
 
-    # Updated API call using openai.Completion.create():
-    response = openai.Completion.create(
-        engine="text-davinci-003",  # Choose a suitable engine 
-        prompt=prompt,
-        max_tokens=150,  # Adjust as needed
-        n=1,  
-        stop=None, 
-        temperature=0.7,  # Adjust as needed
+    response = openai.chat.completions.create(  
+        model="gpt-4",  
+        messages=[
+            {"role": "system", "content": "You are a helpful writing assistant."},
+            {"role": "user", "content": prompt}
+        ]
     )
 
-    passage = response.choices[0].text.strip()  # Access the generated text
+    passage = response.choices[0].message.content..strip()
     return passage
 
 if st.button("Find Meaning and Synonyms"):
