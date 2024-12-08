@@ -81,7 +81,7 @@ def generate_passage(word, meanings_df):
         ]
     )
 
-    passage = response.choices[0].message.content..strip()
+    passage = response.choices[0].message.content.strip()
     return passage
 
 if st.button("Find Meaning and Synonyms"):
