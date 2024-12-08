@@ -1,71 +1,84 @@
+import openai
 import streamlit as st
 import pandas as pd
-import openai
 
-openai.api_key = st.sidebar.text_input("Enter your OpenAI API Key", type="password")
+st.title("Word Meaning and Synonyms Finder")
+
+api_key = st.sidebar.text_input("Enter your OpenAI API key:", type="password")
+if api_key:
+    openai.api_key = api_key
+
+word = st.text_input("What word are you looking for?")
 
 def get_word_details(word):
-    if not openai.api_key:
+    if not api_key:
         st.error("Please enter your API key in the sidebar.")
         return None
+
+    if not word.strip().isalpha():
+        st.warning("Enter a valid word containing only alphabets.")
+        return None
+
     try:
-        with st.spinner("Fetching word details... Please wait."):
-            response = openai.chat.completions.create(
-                model="text-davinci-003",
-                prompt=f"Provide detailed meanings, synonyms, and examples of usage for the word '{word}'.",
-                max_tokens=500,
-                temperature=0.7,
+        with st.spinner("Fetching details... Please wait."):
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an assistant specialized in language analysis."},
+                    {"role": "user",
+                     "content": f"Provide detailed information about the word '{word}' in this exact structured format:\n"
+                                "### Meaning:\n"
+                                "[Meaning]\n"
+                                "### Part of Speech:\n"
+                                "[Part of speech for this meaning]\n"
+                                "### Synonyms:\n"
+                                "[Comma-separated list of synonyms]\n"
+                                "### Example:\n"
+                                "[Example sentence]"}
+                ],
+                max_tokens=1000,
+                temperature=0.7
             )
-        result_text = response.choices[0].text.content.strip()
-        meanings = result_text.split("Meanings:")[1].split("Synonyms:")[0].strip()
-        synonyms = result_text.split("Synonyms:")[1].split("Examples:")[0].strip()
-        examples = result_text.split("Examples:")[1].strip()
-        return pd.DataFrame([{"Word": word, "Meanings": meanings, "Synonyms": synonyms, "Examples": examples}]), meanings, synonyms.split(", "), examples
+
+        content = response.choices[0].message.content.strip()
+        parts = content.split("###")[1:]
+        entries = []
+        entry = {}
+
+        for part in parts:
+            if part.startswith("Meaning:"):
+                if entry:
+                    entries.append(entry)
+                entry = {"Meaning": part.split(":", 1)[1].strip()}
+            elif part.startswith("Part of Speech:"):
+                entry["Part of Speech"] = part.split(":", 1)[1].strip()
+            elif part.startswith("Synonyms:"):
+                entry["Synonyms"] = part.split(":", 1)[1].strip()
+            elif part.startswith("Example:"):
+                entry["Example"] = part.split(":", 1)[1].strip()
+
+        if entry:
+            entries.append(entry)
+
+        df = pd.DataFrame(entries)
+        return df
+
+    except openai.error.AuthenticationError:
+        st.error("Authentication error: Please check your API key.")
+    except openai.error.RateLimitError:
+        st.error("Rate limit exceeded: Too many requests. Try again later.")
     except openai.error.OpenAIError as e:
         st.error(f"OpenAI error: {e}")
-        return None
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
 
-def get_related_words(word):
-    if not openai.api_key:
-        st.error("Please enter your API key in the sidebar.")
-        return None
-    try:
-        with st.spinner("Fetching related words... Please wait."):
-            response = openai.Completion.create(
-                model="text-davinci-003",
-                prompt=f"List words that are commonly used in the same context as '{word}' (not synonyms).",
-                max_tokens=100,
-                temperature=0.7,
-            )
-        related_words = response.choices[0].text.strip()
-        return related_words
-    except openai.error.OpenAIError as e:
-        st.error(f"OpenAI error: {e}")
-        return None
-
-st.title("Find Word Meaning, Synonyms, and Related Words")
-
-word = st.text_input("Enter a word:", placeholder="Type a word to explore its details")
+    return None
 
 if st.button("Find Meaning and Synonyms"):
     if word:
-        result = get_word_details(word)
-        if result:
-            result_df, meanings, synonyms_list, examples = result
-            st.markdown("### Word Details")
-            st.write(result_df)
-        else:
-            st.warning("Could not fetch word details. Try another word.")
-    else:
-        st.warning("Please enter a word!")
-
-if st.button("Show Related Words"):
-    if word:
-        related_words = get_related_words(word)
-        if related_words:
-            st.markdown(f"### Words in the same category as *{word}*:")
-            st.write(related_words)
-        else:
-            st.warning("No related words found.")
+        result_df = get_word_details(word)
+        if result_df is not None:
+            st.markdown(f"### Details for *{word}*:")
+            st.dataframe(result_df)
     else:
         st.warning("Please enter a word!")
