@@ -1,7 +1,6 @@
 import openai
 import streamlit as st
 import pandas as pd
-import random
 
 st.title("Word Meaning and Synonyms Finder")
 
@@ -22,11 +21,11 @@ def get_word_details(word):
 
     try:
         with st.spinner("Fetching details... Please wait."):
-            response = openai.chat.completions.create(
+            response = openai.ChatCompletion.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an assistant specialized in language analysis."},
-                    {"role": "user", 
+                    {"role": "user",
                      "content": f"Provide detailed information about the word '{word}' in this exact structured format:\n"
                                 "### Meaning 1:\n"
                                 "[Meaning]\n"
@@ -84,10 +83,10 @@ def get_word_details(word):
                 "Synonyms": synonyms_list,
                 "Example": examples
             })
-            return df, meanings, synonyms_list, examples
+            return df
         except Exception as parse_error:
             st.error(f"Parsing error: {parse_error}")
-            return None, None, None, None
+            return None
 
     except openai.error.AuthenticationError:
         st.error("Authentication error: Please check your API key.")
@@ -98,53 +97,47 @@ def get_word_details(word):
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
 
-    return None, None, None, None
+    return None
 
-def generate_quiz(meanings, synonyms, examples):
-    questions = []
-    explanations = []
+def get_related_words(word):
+    if not api_key:
+        st.error("Please enter your API key in the sidebar.")
+        return None
 
-    all_options = meanings + synonyms + examples
-    if len(all_options) < 3:
-        raise ValueError("Not enough options to generate the quiz.")
-    
-    for i in range(10):
-        options = random.sample(all_options, 3)  # Ensure we only select 3 options
-        correct_answer_idx = random.choice([0, 1, 2])  # Randomly choose the index of the correct answer
-        question = f"What is the correct meaning of the word based on its definition?"
-        
-        correct_answer = options[correct_answer_idx]
-        explanation = f"The correct answer is: {correct_answer}. This corresponds to the meaning or usage provided earlier."
+    if not word.strip().isalpha():
+        st.warning("Enter a valid word containing only alphabets.")
+        return None
 
-        questions.append((question, options, correct_answer, explanation))
+    try:
+        with st.spinner("Fetching related words... Please wait."):
+            response = openai.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": "You are an assistant specialized in language and context analysis."},
+                    {"role": "user",
+                     "content": f"Provide a list of words or phrases that are often used in the same category or context as the word '{word}'."}
+                ],
+                max_tokens=100,
+                temperature=0.7
+            )
 
-    return questions
+        related_words = response.choices[0].message.content.strip()
+        return related_words
+    except openai.error.OpenAIError as e:
+        st.error(f"Error fetching related words: {e}")
+        return None
 
 if st.button("Find Meaning and Synonyms"):
     if word:
-        result_df, meanings, synonyms_list, examples = get_word_details(word)
+        result_df = get_word_details(word)
         if result_df is not None:
             st.markdown(f"### Details for *{word}*:") 
             st.dataframe(result_df)
-
-            if 'quiz_questions' not in st.session_state:
-                st.session_state.quiz_questions = generate_quiz(meanings, synonyms_list, examples)
-                st.session_state.answers = {}
-
-            for i, (question, options) in enumerate(st.session_state.quiz_questions):
-                st.markdown(f"#### Question {i + 1}")
-                selected_option = st.radio(question, options, key=f"question_{i}")
-                
-                if selected_option:
-                    st.session_state.answers[f"question_{i}"] = selected_option
-
-            for i, (question, options) in enumerate(st.session_state.quiz_questions):
-                if f"question_{i}" in st.session_state.answers:
-                    selected_option = st.session_state.answers[f"question_{i}"]
-                    correct_answer = options[0]  # Assume the first option is correct
-                    if selected_option == correct_answer:
-                        st.success(f"Correct! The correct answer is: {correct_answer}. This corresponds to the meaning or usage provided earlier.")
-                    else:
-                        st.error(f"Incorrect. The correct answer is: {correct_answer}. This corresponds to the meaning or usage provided earlier.")
+            
+            # Fetch related words
+            related_words = get_related_words(word)
+            if related_words:
+                st.markdown("### Related Words:")
+                st.write(related_words)
     else:
         st.warning("Please enter a word!")
