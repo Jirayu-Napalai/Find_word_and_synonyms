@@ -21,7 +21,7 @@ def get_word_details(word):
 
     try:
         with st.spinner("Fetching details... Please wait."):
-            response = openai.ChatCompletion.create(
+            response = openai.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {"role": "system", "content": "You are an assistant specialized in language analysis."},
