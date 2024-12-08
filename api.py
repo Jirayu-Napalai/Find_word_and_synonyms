@@ -31,7 +31,7 @@ def get_word_details(word):
                 {"role": "user", "content": f"Provide the meaning(s) of '{word}' and their corresponding synonyms and an example sentence for each meaning in a JSON format like this: {json_example}"},  
             ],
         )
-        content = response.choices[0].message["content"]
+        content = response.choices[0].message.content.strip()
 
         try:
             data = json.loads(content)
