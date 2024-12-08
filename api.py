@@ -24,7 +24,7 @@ def get_word_details(word):
 
         json_example = "{'meanings': [{'meaning': 'meaning1', 'synonyms': ['synonym1', 'synonym2'], 'example': 'example sentence1'}, {'meaning': 'meaning2', 'synonyms': ['synonym3', 'synonym4'], 'example': 'example sentence2'}]}"
 
-        response = openai.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -41,13 +41,12 @@ def get_word_details(word):
             for meaning_data in meanings:
                 meaning = meaning_data.get("meaning", "")
                 synonyms = meaning_data.get("synonyms", [])
-                example = meaning_data.get("example", "")
-                rows.append({"Word": word, "Meaning": meaning, "Synonyms": ", ".join(synonyms), "Example": example})
+                rows.append({"Word": word, "Meaning": meaning, "Synonyms": ", ".join(synonyms)})
 
             df = pd.DataFrame(rows)
             return df
         except json.JSONDecodeError as e:
-            st.error(f"Error decoding JSON response: {e}")
+            st.error(f"Error decoding JSON response: {e} Content: {content}")
             return None
 
     except Exception as e:
